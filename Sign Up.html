@@ -92,6 +92,7 @@
       firebase.auth().createUserWithEmailAndPassword(email, password).then(function(userCredential){
        document.getElementById('quickstart-verify-email').disabled = false; 
        sendEmailVerification();
+       tellAppInventor('Email Verification Sent!');
       }).catch(function(error) {
         // Handle Errors here.
         var errorCode = error.code;
