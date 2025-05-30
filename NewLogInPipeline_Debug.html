@@ -21,7 +21,29 @@
   <script type="text/javascript">
     function tellAppInventor(message) {
         try {
-            window.AppInventor.setWebViewString(message);
+          // Prevent rapid-fire error messages
+          if (message.includes('INVALID_LOGIN_CREDENTIALS') || 
+              message.includes('Wrong password') ||
+              message.includes('No account found')) {
+        
+            var now = new Date().getTime();
+            if (now - lastAuthAttempt < 2000) { // 2 second cooldown
+              console.log("Auth error throttled");
+              return; // Skip sending this message
+            }
+        
+             // Increment error counter
+            authErrorCount++;
+            if (authErrorCount > 3) {
+            message = "Too many failed attempts. Please try again later.";
+            // Reset after showing this message
+            setTimeout(function() { authErrorCount = 0; }, 5000);
+          }
+        
+          lastAuthAttempt = now;
+          }
+      
+          window.AppInventor.setWebViewString(message);
         } catch(e) {
             console.log("App Inventor Communication Error", e)
         }
