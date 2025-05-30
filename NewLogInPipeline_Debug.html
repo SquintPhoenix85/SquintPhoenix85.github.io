@@ -1,0 +1,278 @@
+<html>
+<head>
+  <meta charset=utf-8 />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyPets.co - Authentication</title>
+
+  <!-- Material Design Theming -->
+  <link rel="stylesheet" href="https://code.getmdl.io/1.1.3/material.orange-indigo.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <script defer src="https://code.getmdl.io/1.1.3/material.min.js"></script>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/3.7.2/firebase.js"></script>
+  <script>
+    // Initialize Firebase
+    // Get the Firebase configuration from App Inventor via the WebViewer.WebViewString property
+    var config = JSON.parse(window.AppInventor.getWebViewString());
+    firebase.initializeApp(config);
+  </script>
+
+  <script type="text/javascript">
+    function tellAppInventor(message) {
+        try {
+            window.AppInventor.setWebViewString(message);
+        } catch(e) {
+            console.log("App Inventor Communication Error", e)
+        }
+    }
+    
+    // Show/Hide sections
+    function showSection(sectionName) {
+      document.getElementById('login-section').style.display = sectionName === 'login' ? 'block' : 'none';
+      document.getElementById('signup-section').style.display = sectionName === 'signup' ? 'block' : 'none';
+    }
+    
+    /**
+     * Handles the sign in button press.
+     */
+    function handleSignIn() {
+      var email = document.getElementById('login-email').value;
+      var password = document.getElementById('login-password').value;
+      
+      if (email.length < 4) {
+        tellAppInventor('Please enter an email address.');
+        return;
+      }
+      if (password.length < 4) {
+        tellAppInventor('Please enter a password.');
+        return;
+      }
+      
+      document.getElementById('login-btn').disabled = true;
+      
+      firebase.auth().signInWithEmailAndPassword(email, password)
+        .then(function(userCredential) {
+          // Sign in successful
+          tellAppInventor('Sign in successful!');
+        })
+        .catch(function(error) {
+          var errorCode = error.code;
+          var errorMessage = error.message;
+          
+          if (errorCode === 'auth/wrong-password') {
+            tellAppInventor('Wrong password.');
+          } else if (errorCode === 'auth/user-not-found') {
+            tellAppInventor('No account found with this email.');
+          } else {
+            tellAppInventor(errorMessage);
+          }
+          console.log(error);
+          document.getElementById('login-btn').disabled = false;
+        });
+    }
+    
+    /**
+     * Handles the sign up button press.
+     */
+    function handleSignUp() {
+      var email = document.getElementById('signup-email').value;
+      var password = document.getElementById('signup-password').value;
+      
+      if (email.length < 4) {
+        tellAppInventor('Please enter an email address.');
+        return;
+      }
+      if (password.length < 4) {
+        tellAppInventor('Please enter a password of 4 or more characters.');
+        return;
+      }
+      
+      document.getElementById('signup-btn').disabled = true;
+      
+      firebase.auth().createUserWithEmailAndPassword(email, password)
+        .then(function(userCredential) {
+          // Sign up successful
+          document.getElementById('verify-email-btn').disabled = false;
+          tellAppInventor('Sign up successful! Please verify your email.');
+        })
+        .catch(function(error) {
+          var errorCode = error.code;
+          var errorMessage = error.message;
+          
+          if (errorCode == 'auth/weak-password') {
+            tellAppInventor('The password is too weak.');
+          } else if (errorCode == 'auth/email-already-in-use') {
+            tellAppInventor('An account with this email already exists.');
+          } else {
+            tellAppInventor(errorMessage);
+          }
+          console.log(error);
+          document.getElementById('signup-btn').disabled = false;
+        });
+    }
+    
+    /**
+     * Sends an email verification to the user.
+     */
+    function sendEmailVerification() {
+      firebase.auth().currentUser.sendEmailVerification().then(function() {
+        tellAppInventor('Email Verification Sent!');
+      }).catch(function(error) {
+        tellAppInventor('Error sending verification email: ' + error.message);
+      });
+    }
+    
+    function sendPasswordReset() {
+      var email = document.getElementById('reset-email').value;
+      
+      if (email.length < 4) {
+        tellAppInventor('Please enter an email address.');
+        return;
+      }
+      
+      firebase.auth().sendPasswordResetEmail(email).then(function() {
+        tellAppInventor('Password Reset Email Sent!');
+      }).catch(function(error) {
+        var errorCode = error.code;
+        var errorMessage = error.message;
+        
+        if (errorCode == 'auth/invalid-email') {
+          tellAppInventor('Invalid email address.');
+        } else if (errorCode == 'auth/user-not-found') {
+          tellAppInventor('No account found with this email.');
+        } else {
+          tellAppInventor(errorMessage);
+        }
+        console.log(error);
+      });
+    }
+    
+    /**
+     * initApp handles setting up UI event listeners and registering Firebase auth listeners
+     */
+    function initApp() {
+      // Listening for auth state changes
+      firebase.auth().onAuthStateChanged(function(user) {
+      try {
+        // Safely disable verify email button
+        var verifyBtn = document.getElementById('verify-email-btn');
+        if (verifyBtn) verifyBtn.disabled = true;
+      
+        if (user) {
+          // User is signed in - handle null values safely
+          var displayName = user.displayName || '';
+          var email = user.email || '';
+          var emailVerified = user.emailVerified;
+          var photoURL = user.photoURL || '';
+          var isAnonymous = user.isAnonymous;
+          var uid = user.uid;
+
+          if (emailVerified && !isAnonymous) {
+            tellAppInventor(uid + ',' + email + ',' + displayName + ',' + photoURL);
+          } else if (!emailVerified) {
+            tellAppInventor('Please verify your email to complete registration.');
+            if (verifyBtn) verifyBtn.disabled = false;
+          }
+        }
+      
+        // Re-enable buttons safely
+        var loginBtn = document.getElementById('login-btn');
+        var signupBtn = document.getElementById('signup-btn');
+        if (loginBtn) loginBtn.disabled = false;
+        if (signupBtn) signupBtn.disabled = false;
+      
+      } catch (error) {
+        console.log('Auth state change error:', error);
+        // Don't call tellAppInventor here to avoid infinite loop
+      }
+    });
+  
+    // Event listeners with safety checks
+    try {
+      var loginBtn = document.getElementById('login-btn');
+      var signupBtn = document.getElementById('signup-btn');
+      var verifyBtn = document.getElementById('verify-email-btn');
+      var resetBtn = document.getElementById('reset-password-btn');
+      var showSignupLink = document.getElementById('show-signup');
+      var showLoginLink = document.getElementById('show-login');
+    
+      if (loginBtn) loginBtn.addEventListener('click', handleSignIn, false);
+      if (signupBtn) signupBtn.addEventListener('click', handleSignUp, false);
+      if (verifyBtn) verifyBtn.addEventListener('click', sendEmailVerification, false);
+      if (resetBtn) resetBtn.addEventListener('click', sendPasswordReset, false);
+      if (showSignupLink) showSignupLink.addEventListener('click', function() { showSection('signup'); }, false);
+      if (showLoginLink) showLoginLink.addEventListener('click', function() { showSection('login'); }, false);
+    } catch (error) {
+      console.log('Event listener setup error:', error);
+    }
+  }
+    
+    window.onload = function() {
+      initApp();
+      showSection('login'); // Show login section by default
+    };
+  </script>
+</head>
+<body>
+<div class="demo-layout mdl-layout mdl-js-layout mdl-layout--fixed-header">
+
+  <main class="mdl-layout__content mdl-color--grey-100">
+    <div class="mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-grid">
+
+      <!-- LOG IN SECTION -->
+      <div id="login-section" class="mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-cell--12-col-desktop">
+        <div class="mdl-card__title mdl-color--light-blue-600 mdl-color-text--white">
+          <h2 class="mdl-card__title-text">Sign In to MyPets.co</h2>
+        </div>
+        <div class="mdl-card__supporting-text mdl-color-text--grey-600">
+          <p>Enter your email and password to sign in to your account.</p>
+
+          <input class="mdl-textfield__input" style="display:inline;width:auto;" type="text" id="login-email" name="login-email" placeholder="Email"/>
+          <p/><p/>
+          <input class="mdl-textfield__input" style="display:inline;width:auto;" type="password" id="login-password" name="login-password" placeholder="Password"/>
+          <p/>
+          
+          <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" id="login-btn">Sign In</button>
+          <p/>
+          
+          <p>Don't have an account? <a href="#" id="show-signup">Sign up here</a></p>
+          
+          <!-- Password Reset -->
+          <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
+            <p><strong>Forgot your password?</strong></p>
+            <input class="mdl-textfield__input" style="display:inline;width:auto;" type="text" id="reset-email" name="reset-email" placeholder="Enter your email"/>
+            <p/>
+            <button class="mdl-button mdl-js-button mdl-button--raised" id="reset-password-btn">Send Password Reset Email</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIGN UP SECTION -->
+      <div id="signup-section" class="mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-cell--12-col-desktop" style="display:none;">
+        <div class="mdl-card__title mdl-color--green-600 mdl-color-text--white">
+          <h2 class="mdl-card__title-text">Sign Up for MyPets.co</h2>
+        </div>
+        <div class="mdl-card__supporting-text mdl-color-text--grey-600">
+          <p>Create a new account to get started with MyPets.co.</p>
+
+          <input class="mdl-textfield__input" style="display:inline;width:auto;" type="text" id="signup-email" name="signup-email" placeholder="Email"/>
+          <p/><p/>
+          <input class="mdl-textfield__input" style="display:inline;width:auto;" type="password" id="signup-password" name="signup-password" placeholder="Password (4+ characters)"/>
+          <p/>
+          
+          <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" id="signup-btn">Sign Up</button>
+          <p/>
+          
+          <button class="mdl-button mdl-js-button mdl-button--raised" disabled id="verify-email-btn">Send Email Verification</button>
+          <p/>
+          
+          <p>Already have an account? <a href="#" id="show-login">Sign in here</a></p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+</body>
+</html>
