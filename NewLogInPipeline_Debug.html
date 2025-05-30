@@ -153,40 +153,46 @@
      */
     function initApp() {
       // Listening for auth state changes
-      firebase.auth().onAuthStateChanged(function(user) {
-      try {
-        // Safely disable verify email button
-        var verifyBtn = document.getElementById('verify-email-btn');
-        if (verifyBtn) verifyBtn.disabled = true;
-      
-        if (user) {
-          // User is signed in - handle null values safely
-          var displayName = user.displayName || '';
-          var email = user.email || '';
-          var emailVerified = user.emailVerified;
-          var photoURL = user.photoURL || '';
-          var isAnonymous = user.isAnonymous;
-          var uid = user.uid;
-
-          if (emailVerified && !isAnonymous) {
-            tellAppInventor(uid + ',' + email + ',' + displayName + ',' + photoURL);
-          } else if (!emailVerified) {
-            tellAppInventor('Please verify your email to complete registration.');
-            if (verifyBtn) verifyBtn.disabled = false;
-          }
-        }
-      
-        // Re-enable buttons safely
-        var loginBtn = document.getElementById('login-btn');
-        var signupBtn = document.getElementById('signup-btn');
-        if (loginBtn) loginBtn.disabled = false;
-        if (signupBtn) signupBtn.disabled = false;
-      
-      } catch (error) {
-        console.log('Auth state change error:', error);
-        // Don't call tellAppInventor here to avoid infinite loop
+      if (!firebase.apps.length) {
+      console.log('Firebase not initialized, skipping auth setup');
+      return;
       }
-    });
+      firebase.auth().onAuthStateChanged(function(user) {
+        try {
+          // Safely disable verify email button
+          var verifyBtn = document.getElementById('verify-email-btn');
+          if (verifyBtn) verifyBtn.disabled = true;
+  
+          if (user) {
+             // User is signed in - handle null values safely
+            var displayName = user.displayName || '';
+            var email = user.email || '';
+            var emailVerified = user.emailVerified;
+            var photoURL = user.photoURL || '';
+            var isAnonymous = user.isAnonymous;
+            var uid = user.uid;
+
+            if (emailVerified && !isAnonymous) {
+              tellAppInventor(uid + ',' + email + ',' + displayName + ',' + photoURL);
+            } else if (!emailVerified) {
+              // DON'T call tellAppInventor here - this can cause loops
+              console.log('User email not verified');
+              if (verifyBtn) verifyBtn.disabled = false;
+            }
+          }
+          // If user is null (signed out), don't call tellAppInventor
+  
+          // Re-enable buttons safely
+          var loginBtn = document.getElementById('login-btn');
+          var signupBtn = document.getElementById('signup-btn');
+          if (loginBtn) loginBtn.disabled = false;
+          if (signupBtn) signupBtn.disabled = false;
+  
+        } catch (error) {
+          console.log('Auth state change error:', error);
+          // Don't call tellAppInventor here to avoid infinite loop
+        }
+      });
   
     // Event listeners with safety checks
     try {
