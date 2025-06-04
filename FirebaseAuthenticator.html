@@ -217,6 +217,14 @@
   </script>
 </head>
 <body>
+  <script>
+  try {
+    alert("AppInventor exists? " + (typeof window.AppInventor));
+  } catch (e) {
+    alert("AppInventor reference failed: " + e.message);
+  }
+</script>
+
 <div class="demo-layout mdl-layout mdl-js-layout mdl-layout--fixed-header">
 
   <!-- Header section containing title 
