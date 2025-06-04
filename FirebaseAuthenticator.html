@@ -18,12 +18,13 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <script>
-  // Initialize Firebase
-  
-  // Get the Firebase configuration from App Inventor via the WebViewer.WebViewString property
-  var config = JSON.parse(window.AppInventor.getWebViewString());
-  
-  firebase.initializeApp(config);
+  try {
+    var config = JSON.parse(window.AppInventor.getWebViewString());
+    console.log("Config loaded:", config);
+    firebase.initializeApp(config);
+  } catch (e) {
+    alert("CONFIG LOAD FAILED: " + e.message);
+  }
 </script>
 
   <script type="text/javascript">
