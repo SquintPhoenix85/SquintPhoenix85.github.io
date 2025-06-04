@@ -16,31 +16,20 @@
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-
 <script>
-    function waitForConfigAndInitialize(attempt = 0) {
-    try {
-      var configString = window.AppInventor.getWebViewString();
-      if (!configString || configString === "null") {
-        if (attempt < 20) {
-          setTimeout(() => waitForConfigAndInitialize(attempt + 1), 250); // wait 250ms and try again
-          return;
-        } else {
-          alert("Firebase config not received. Please reopen the app.");
-          return;
-        }
-      }
-
-      var config = JSON.parse(configString);
-      console.log("Firebase Config Loaded:", config);
-      firebase.initializeApp(config);
-      initApp(); // Only init Firebase Auth listeners *after* config is good
-
-    } catch (e) {
-      alert("Failed to initialize Firebase: " + e.message);
-    }
-  }
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLmGrE_aMgusUL28cNwMboO0AEor9KI4w",
+    authDomain: "mypetsauthenticator.firebaseapp.com",
+    projectId: "mypetsauthenticator",
+    storageBucket: "mypetsauthenticator.firebasestorage.app",
+    messagingSenderId: "234261839543",
+    appId: "1:234261839543:web:10de47d507126a92189732"
+  };
+  firebase.initializeApp(firebaseConfig);
 </script>
+
+
+
 
   <script type="text/javascript">
     function tellAppInventor(message) {
@@ -212,7 +201,7 @@
       document.getElementById('quickstart-password-reset').addEventListener('click', sendPasswordReset, false);
     }
     window.onload = function() {
-      waitForConfigAndInitialize();
+      initApp();
     };
   </script>
 </head>

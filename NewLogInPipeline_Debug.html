@@ -12,10 +12,15 @@
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/3.7.2/firebase.js"></script>
   <script>
-    // Initialize Firebase
-    // Get the Firebase configuration from App Inventor via the WebViewer.WebViewString property
-    var config = JSON.parse(window.AppInventor.getWebViewString());
-    firebase.initializeApp(config);
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLmGrE_aMgusUL28cNwMboO0AEor9KI4w",
+      authDomain: "mypetsauthenticator.firebaseapp.com",
+      projectId: "mypetsauthenticator",
+      storageBucket: "mypetsauthenticator.firebasestorage.app",
+      messagingSenderId: "234261839543",
+      appId: "1:234261839543:web:10de47d507126a92189732"
+    };
+    firebase.initializeApp(firebaseConfig);
   </script>
 
   <script type="text/javascript">
