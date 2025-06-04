@@ -18,12 +18,27 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <script>
-  try {
-    var config = JSON.parse(window.AppInventor.getWebViewString());
-    console.log("Config loaded:", config);
-    firebase.initializeApp(config);
-  } catch (e) {
-    alert("CONFIG LOAD FAILED: " + e.message);
+    function waitForConfigAndInitialize(attempt = 0) {
+    try {
+      var configString = window.AppInventor.getWebViewString();
+      if (!configString || configString === "null") {
+        if (attempt < 20) {
+          setTimeout(() => waitForConfigAndInitialize(attempt + 1), 250); // wait 250ms and try again
+          return;
+        } else {
+          alert("Firebase config not received. Please reopen the app.");
+          return;
+        }
+      }
+
+      var config = JSON.parse(configString);
+      console.log("Firebase Config Loaded:", config);
+      firebase.initializeApp(config);
+      initApp(); // Only init Firebase Auth listeners *after* config is good
+
+    } catch (e) {
+      alert("Failed to initialize Firebase: " + e.message);
+    }
   }
 </script>
 
@@ -197,7 +212,7 @@
       document.getElementById('quickstart-password-reset').addEventListener('click', sendPasswordReset, false);
     }
     window.onload = function() {
-      initApp();
+      waitForConfigAndInitialize();
     };
   </script>
 </head>
